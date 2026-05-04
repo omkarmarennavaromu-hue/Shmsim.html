@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Omkar Physics Lab — SHM Simulator</title>
+
+<style>
+body{
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family:Arial, sans-serif;
+    overflow:hidden;
+}
+
+.panel{
+    position:fixed;
+    top:20px;
+    left:20px;
+    width:260px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:12px;
+    padding:15px;
+}
+
+label{display:block;margin-top:10px;font-size:13px;}
+input{width:220px;}
+
+button{
+    margin-top:10px;
+    padding:6px 10px;
+    background:#111;
+    color:#fff;
+    border:1px solid #fff;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+button:hover{transform:scale(1.05);}
+
+canvas{display:block;}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+    <h3>SHM Simulator</h3>
+
+    <label>Amplitude (A): <span id="Aval">100</span></label>
+    <input type="range" id="A" min="20" max="200" value="100">
+
+    <label>Angular Frequency (ω): <span id="Wval">2</span></label>
+    <input type="range" id="W" min="0.5" max="5" step="0.1" value="2">
+
+    <label>Mode:</label>
+    <select id="mode">
+        <option value="spring">Spring Mass</option>
+        <option value="pendulum">Pendulum</option>
+    </select>
+
+    <div>
+        <button onclick="start()">Start</button>
+        <button onclick="pause()">Pause</button>
+        <button onclick="reset()">Reset</button>
+    </div>
+
+    <div style="margin-top:10px;font-size:13px">
+        Time: <span id="t">0</span>s
+    </div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let t = 0;
+let running = false;
+
+let A = 100;
+let w = 2;
+
+const Ainput = document.getElementById("A");
+const Winput = document.getElementById("W");
+
+const Aval = document.getElementById("Aval");
+const Wval = document.getElementById("Wval");
+
+const mode = document.getElementById("mode");
+
+Ainput.oninput = () => { A = +Ainput.value; Aval.textContent = A; }
+Winput.oninput = () => { w = +Winput.value; Wval.textContent = w; }
+
+function start(){ running = true; }
+function pause(){ running = false; }
+function reset(){ t = 0; running = false; }
+
+function drawSpring(x){
+    ctx.beginPath();
+    ctx.moveTo(canvas.width/2, 100);
+
+    let segments = 20;
+    for(let i=0;i<segments;i++){
+        let px = canvas.width/2 + (x/segments)*i;
+        let py = 100 + Math.sin(i)*10;
+        ctx.lineTo(px, py);
+    }
+
+    ctx.strokeStyle="#fff";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(canvas.width/2 + x, 100, 10, 0, Math.PI*2);
+    ctx.fillStyle="#fff";
+    ctx.fill();
+}
+
+function drawPendulum(theta){
+    let originX = canvas.width/2;
+    let originY = 120;
+
+    let len = 200;
+
+    let x = originX + len * Math.sin(theta);
+    let y = originY + len * Math.cos(theta);
+
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle="#fff";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI*2);
+    ctx.fillStyle="#fff";
+    ctx.fill();
+}
+
+function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(running) t += 0.016;
+
+    let displacement = A * Math.cos(w * t);
+
+    if(mode.value === "spring"){
+        drawSpring(displacement);
+    } else {
+        drawPendulum(displacement * 0.01);
+    }
+
+    document.getElementById("t").textContent = t.toFixed(2);
+
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
